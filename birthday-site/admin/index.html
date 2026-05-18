@@ -1,0 +1,521 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>🎂 生日网站配置中心</title>
+  <style>
+    :root {
+      --pink: #ff6b9d;
+      --light-pink: #ffd6e7;
+      --gold: #ffd700;
+      --shadow: rgba(255, 107, 157, 0.3);
+    }
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body {
+      font-family: 'KaiTi', 'STKaiti', 'SimKai', serif;
+      background: linear-gradient(135deg, #fff5f7 0%, #ffe8ef 50%, #ffd6e7 100%);
+      min-height: 100vh;
+      display: flex;
+      justify-content: center;
+      align-items: flex-start;
+      padding: 40px 20px;
+    }
+    .container {
+      max-width: 720px;
+      width: 100%;
+      background: rgba(255, 255, 255, 0.85);
+      backdrop-filter: blur(20px);
+      border-radius: 32px;
+      padding: 48px 40px;
+      box-shadow: 0 20px 60px rgba(255, 107, 157, 0.2), 0 0 0 1px rgba(255, 107, 157, 0.1);
+    }
+    h1 {
+      text-align: center;
+      font-size: 32px;
+      color: #d6336c;
+      margin-bottom: 36px;
+      letter-spacing: 2px;
+    }
+    .section {
+      background: white;
+      border-radius: 20px;
+      padding: 28px;
+      margin-bottom: 28px;
+      box-shadow: 0 4px 20px rgba(0,0,0,0.04);
+      border: 1px solid rgba(255, 107, 157, 0.12);
+    }
+    .section-title {
+      font-size: 20px;
+      color: #d6336c;
+      margin-bottom: 16px;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+    .upload-zone {
+      border: 2px dashed var(--pink);
+      border-radius: 16px;
+      padding: 40px 20px;
+      text-align: center;
+      cursor: pointer;
+      transition: all 0.3s;
+      background: #fff9fc;
+    }
+    .upload-zone:hover, .upload-zone.dragover {
+      border-color: #ff4d88;
+      background: #fff0f5;
+      transform: scale(1.01);
+    }
+    .upload-zone p { color: #999; font-size: 15px; margin-top: 8px; }
+    .upload-zone .icon { font-size: 48px; }
+    .preview-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(100px, 1fr));
+      gap: 12px;
+      margin-top: 16px;
+    }
+    .preview-item {
+      position: relative;
+      aspect-ratio: 1;
+      border-radius: 12px;
+      overflow: hidden;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+    }
+    .preview-item img {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+    }
+    .preview-item .delete-btn {
+      position: absolute;
+      top: 4px; right: 4px;
+      width: 24px; height: 24px;
+      border-radius: 50%;
+      border: none;
+      background: rgba(255,0,0,0.8);
+      color: white;
+      cursor: pointer;
+      font-size: 14px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      transition: all 0.2s;
+    }
+    .preview-item .delete-btn:hover { transform: scale(1.2); }
+    .count-badge {
+      display: inline-block;
+      background: var(--pink);
+      color: white;
+      padding: 2px 12px;
+      border-radius: 20px;
+      font-size: 14px;
+      margin-left: 8px;
+    }
+    .audio-controls {
+      display: flex;
+      align-items: center;
+      gap: 16px;
+      margin-top: 12px;
+    }
+    .audio-controls audio { flex: 1; }
+    .upload-btn {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      padding: 10px 24px;
+      background: var(--pink);
+      color: white;
+      border: none;
+      border-radius: 12px;
+      cursor: pointer;
+      font-size: 15px;
+      transition: all 0.3s;
+      font-family: inherit;
+    }
+    .upload-btn:hover {
+      background: #ff4d88;
+      transform: translateY(-1px);
+      box-shadow: 0 4px 15px var(--shadow);
+    }
+    .upload-btn-small {
+      padding: 8px 16px;
+      font-size: 13px;
+    }
+    .text-area-wrapper {
+      position: relative;
+    }
+    textarea {
+      width: 100%;
+      height: 120px;
+      padding: 16px;
+      border: 2px solid #eee;
+      border-radius: 16px;
+      font-family: 'KaiTi', 'STKaiti', 'SimKai', serif;
+      font-size: 20px;
+      line-height: 1.8;
+      resize: vertical;
+      transition: border-color 0.3s;
+      background: #fefefe;
+    }
+    textarea:focus {
+      outline: none;
+      border-color: var(--pink);
+    }
+    .char-count {
+      text-align: right;
+      color: #999;
+      font-size: 14px;
+      margin-top: 8px;
+    }
+    .char-count.over { color: #e74c3c; }
+    .generate-btn {
+      display: block;
+      width: 100%;
+      padding: 18px;
+      background: linear-gradient(135deg, var(--pink), #e64980);
+      color: white;
+      border: none;
+      border-radius: 16px;
+      font-size: 20px;
+      cursor: pointer;
+      transition: all 0.3s;
+      font-family: inherit;
+      letter-spacing: 4px;
+    }
+    .generate-btn:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 8px 30px var(--shadow);
+    }
+    .generate-btn:disabled {
+      opacity: 0.5;
+      cursor: not-allowed;
+      transform: none;
+    }
+    .link-section {
+      margin-top: 20px;
+      padding: 20px;
+      background: #f0fdf4;
+      border-radius: 16px;
+      border: 1px solid #86efac;
+      display: none;
+    }
+    .link-section.show { display: block; }
+    .link-section .link-label {
+      font-size: 16px;
+      color: #166534;
+      margin-bottom: 8px;
+    }
+    .link-section .link-box {
+      display: flex;
+      gap: 8px;
+    }
+    .link-section input {
+      flex: 1;
+      padding: 12px 16px;
+      border: 2px solid #86efac;
+      border-radius: 10px;
+      font-size: 16px;
+      color: #166534;
+      background: white;
+    }
+    .link-section .copy-btn {
+      padding: 12px 24px;
+      background: #22c55e;
+      color: white;
+      border: none;
+      border-radius: 10px;
+      cursor: pointer;
+      font-size: 15px;
+      transition: all 0.2s;
+    }
+    .link-section .copy-btn:hover { background: #16a34a; }
+    .toast {
+      position: fixed;
+      top: 20px;
+      left: 50%;
+      transform: translateX(-50%);
+      padding: 12px 28px;
+      border-radius: 12px;
+      color: white;
+      font-size: 15px;
+      opacity: 0;
+      transition: opacity 0.3s, transform 0.3s;
+      pointer-events: none;
+      z-index: 999;
+    }
+    .toast.show { opacity: 1; transform: translateX(-50%) translateY(0); }
+    .toast.success { background: #22c55e; }
+    .toast.error { background: #ef4444; }
+    .toast.info { background: #3b82f6; }
+    .loading-spinner {
+      display: inline-block;
+      width: 20px;
+      height: 20px;
+      border: 3px solid rgba(255,255,255,0.3);
+      border-top-color: white;
+      border-radius: 50%;
+      animation: spin 0.6s linear infinite;
+    }
+    @keyframes spin { to { transform: rotate(360deg); } }
+    .audio-status { font-size: 14px; color: #666; }
+  </style>
+</head>
+<body>
+  <div class="toast" id="toast"></div>
+  <div class="container">
+    <h1>🎂 生日网站配置中心</h1>
+
+    <div class="section">
+      <div class="section-title">
+        📸 上传图片
+        <span class="count-badge" id="imageCount">0/8</span>
+      </div>
+      <div class="upload-zone" id="imageDropZone">
+        <div class="icon">🖼️</div>
+        <p>拖拽图片到此处，或点击选择</p>
+        <p style="font-size:12px;color:#bbb;margin-top:4px;">支持 JPG/PNG/WebP，最多8张，自动压缩为超清 WebP</p>
+      </div>
+      <input type="file" id="imageInput" accept="image/jpeg,image/png,image/webp" multiple style="display:none">
+      <div class="preview-grid" id="imagePreview"></div>
+    </div>
+
+    <div class="section">
+      <div class="section-title">🎵 上传音频</div>
+      <div class="audio-controls">
+        <button class="upload-btn upload-btn-small" id="audioUploadBtn">📂 选择音频文件</button>
+        <span class="audio-status" id="audioStatus">未上传</span>
+      </div>
+      <input type="file" id="audioInput" accept="audio/mp3,audio/wav,audio/ogg,audio/m4a,audio/aac,audio/flac" style="display:none">
+      <div id="audioPlayerWrapper" style="margin-top:12px;display:none;">
+        <audio controls style="width:100%" id="audioPlayer"></audio>
+      </div>
+    </div>
+
+    <div class="section">
+      <div class="section-title">✍️ 祝福语文本
+        <span style="font-size:13px;color:#999;font-weight:normal;margin-left:8px;">（限100字·楷体）</span>
+      </div>
+      <div class="text-area-wrapper">
+        <textarea id="textInput" maxlength="100" placeholder="写下你想对寿星说的祝福语..."></textarea>
+        <div class="char-count"><span id="charCount">0</span> / 100</div>
+      </div>
+    </div>
+
+    <button class="generate-btn" id="generateBtn">🎉 生成分享链接</button>
+
+    <div class="link-section" id="linkSection">
+      <div class="link-label">✅ 分享链接已生成！发给寿星吧~</div>
+      <div class="link-box">
+        <input type="text" id="shareLink" readonly>
+        <button class="copy-btn" id="copyBtn">📋 复制</button>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    const uploadedImages = [];
+
+    function showToast(msg, type = 'info') {
+      const t = document.getElementById('toast');
+      t.textContent = msg;
+      t.className = `toast ${type} show`;
+      setTimeout(() => t.classList.remove('show'), 2500);
+    }
+
+    // Image upload
+    document.getElementById('imageDropZone').addEventListener('click', () => {
+      document.getElementById('imageInput').click();
+    });
+
+    document.getElementById('imageDropZone').addEventListener('dragover', (e) => {
+      e.preventDefault();
+      e.currentTarget.classList.add('dragover');
+    });
+
+    document.getElementById('imageDropZone').addEventListener('dragleave', (e) => {
+      e.currentTarget.classList.remove('dragover');
+    });
+
+    document.getElementById('imageDropZone').addEventListener('drop', (e) => {
+      e.preventDefault();
+      e.currentTarget.classList.remove('dragover');
+      handleFiles(e.dataTransfer.files);
+    });
+
+    document.getElementById('imageInput').addEventListener('change', (e) => {
+      handleFiles(e.target.files);
+    });
+
+    async function handleFiles(files) {
+      const remaining = 8 - uploadedImages.length;
+      if (files.length > remaining) {
+        showToast(`最多还能上传 ${remaining} 张图片`, 'error');
+        return;
+      }
+      for (const file of files) {
+        if (!file.type.match(/image\/(jpeg|png|webp)/)) {
+          showToast(`${file.name} 格式不支持`, 'error');
+          continue;
+        }
+        if (file.size > 20 * 1024 * 1024) {
+          showToast(`${file.name} 超过20MB`, 'error');
+          continue;
+        }
+        uploadedImages.push(file);
+      }
+      renderImagePreviews();
+      await uploadImages();
+    }
+
+    function renderImagePreviews() {
+      const grid = document.getElementById('imagePreview');
+      grid.innerHTML = '';
+      uploadedImages.forEach((file, i) => {
+        const div = document.createElement('div');
+        div.className = 'preview-item';
+        const img = document.createElement('img');
+        img.src = URL.createObjectURL(file);
+        const btn = document.createElement('button');
+        btn.className = 'delete-btn';
+        btn.innerHTML = '✕';
+        btn.onclick = async (e) => {
+          e.stopPropagation();
+          uploadedImages.splice(i, 1);
+          renderImagePreviews();
+          updateImageCount();
+          await uploadImages();
+        };
+        div.appendChild(img);
+        div.appendChild(btn);
+        grid.appendChild(div);
+      });
+      updateImageCount();
+    }
+
+    function updateImageCount() {
+      document.getElementById('imageCount').textContent = `${uploadedImages.length}/8`;
+    }
+
+    async function uploadImages() {
+      if (uploadedImages.length === 0) return;
+      const formData = new FormData();
+      for (const file of uploadedImages) {
+        formData.append('images', file);
+      }
+      try {
+        const res = await fetch('/api/upload/images', { method: 'POST', body: formData });
+        const data = await res.json();
+        if (!data.success) showToast(data.message, 'error');
+      } catch (e) {
+        showToast('图片上传失败', 'error');
+      }
+    }
+
+    // Audio upload
+    document.getElementById('audioUploadBtn').addEventListener('click', () => {
+      document.getElementById('audioInput').click();
+    });
+
+    document.getElementById('audioInput').addEventListener('change', async (e) => {
+      const file = e.target.files[0];
+      if (!file) return;
+
+      const formData = new FormData();
+      formData.append('audio', file);
+
+      try {
+        const res = await fetch('/api/upload/audio', { method: 'POST', body: formData });
+        const data = await res.json();
+        if (data.success) {
+          const player = document.getElementById('audioPlayer');
+          player.src = `/uploads/audio/${data.file}`;
+          document.getElementById('audioPlayerWrapper').style.display = 'block';
+          document.getElementById('audioStatus').textContent = `✅ ${file.name}`;
+          showToast('音频上传成功', 'success');
+        } else {
+          showToast(data.message, 'error');
+        }
+      } catch (e) {
+        showToast('音频上传失败', 'error');
+      }
+    });
+
+    // Text input
+    document.getElementById('textInput').addEventListener('input', (e) => {
+      const len = e.target.value.length;
+      const count = document.getElementById('charCount');
+      count.textContent = len;
+      count.parentElement.className = len > 100 ? 'char-count over' : 'char-count';
+    });
+
+    // Generate link
+    document.getElementById('generateBtn').addEventListener('click', async () => {
+      const text = document.getElementById('textInput').value.trim();
+      if (!text) {
+        showToast('请填写祝福语文本', 'error');
+        return;
+      }
+
+      const btn = document.getElementById('generateBtn');
+      btn.disabled = true;
+      btn.innerHTML = '<span class="loading-spinner"></span> 生成中...';
+
+      try {
+        const res = await fetch('/api/upload/text', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ text })
+        });
+        const data = await res.json();
+        if (data.success) {
+          const link = `${window.location.protocol}//${window.location.hostname}:${window.location.port}/`;
+          document.getElementById('shareLink').value = link;
+          document.getElementById('linkSection').classList.add('show');
+          showToast('🎉 链接生成成功！', 'success');
+        } else {
+          showToast(data.message, 'error');
+        }
+      } catch (e) {
+        showToast('生成失败', 'error');
+      } finally {
+        btn.disabled = false;
+        btn.innerHTML = '🎉 生成分享链接';
+      }
+    });
+
+    // Copy link
+    document.getElementById('copyBtn').addEventListener('click', () => {
+      const input = document.getElementById('shareLink');
+      input.select();
+      navigator.clipboard.writeText(input.value).then(() => {
+        showToast('📋 链接已复制！', 'success');
+      }).catch(() => {
+        document.execCommand('copy');
+        showToast('📋 链接已复制！', 'success');
+      });
+    });
+
+    // Load existing config
+    async function loadConfig() {
+      try {
+        const res = await fetch('/api/config');
+        const data = await res.json();
+        if (data.success && data.config) {
+          if (data.config.text) {
+            document.getElementById('textInput').value = data.config.text;
+            document.getElementById('charCount').textContent = data.config.text.length;
+          }
+          if (data.config.audio) {
+            const player = document.getElementById('audioPlayer');
+            player.src = `/uploads/audio/${data.config.audio}`;
+            document.getElementById('audioPlayerWrapper').style.display = 'block';
+            document.getElementById('audioStatus').textContent = '✅ 已上传';
+          }
+        }
+      } catch (e) {}
+    }
+    loadConfig();
+  </script>
+</body>
+</html>

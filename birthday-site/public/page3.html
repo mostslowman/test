@@ -1,0 +1,54 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>生日快乐 - 3D画廊</title>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+  <link rel="stylesheet" href="css/page3.css">
+</head>
+<body>
+  <canvas id="three-canvas"></canvas>
+
+  <div id="loading-overlay">
+    <div class="loading-spinner"></div>
+    <div class="loading-text">加载中...</div>
+  </div>
+
+  <div id="no-images-msg">暂无图片</div>
+
+  <button id="back-btn">&#x2190;</button>
+
+  <div id="image-info"></div>
+
+  <div id="audio-controls">
+    <button id="play-btn">
+      <svg viewBox="0 0 24 24"><path d="M8 5v14l11-7z"/></svg>
+    </button>
+
+    <div class="audio-progress-container">
+      <span class="audio-time current-time" id="current-time">00:00</span>
+      <input type="range" id="progress-bar" min="0" max="1" step="0.001" value="0">
+      <span class="audio-time duration" id="duration">00:00</span>
+    </div>
+
+    <div id="volume-container">
+      <span id="volume-icon">
+        <svg viewBox="0 0 24 24"><path d="M3 9v6h4l5 5V4L7 9H3zm13.5 3c0-1.77-1.02-3.29-2.5-4.03v8.05c1.48-.73 2.5-2.25 2.5-4.02zM16.5 3l-1.5 1.5C16.5 6.5 18 9 18 12s-1.5 5.5-3 7.5l1.5 1.5c2-2.5 3.5-5.5 3.5-9s-1.5-6.5-3.5-9z"/></svg>
+      </span>
+      <input type="range" id="volume-slider" min="0" max="1" step="0.01" value="0.5">
+    </div>
+
+    <select id="speed-select">
+      <option value="0.5">0.5x</option>
+      <option value="0.75">0.75x</option>
+      <option value="1" selected>1x</option>
+      <option value="1.25">1.25x</option>
+      <option value="1.5">1.5x</option>
+      <option value="2">2x</option>
+    </select>
+  </div>
+
+  <script src="js/page3.js"></script>
+</body>
+</html>

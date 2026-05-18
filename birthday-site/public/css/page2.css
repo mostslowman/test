@@ -79,10 +79,11 @@ body.fade-out {
   will-change: transform, opacity;
 }
 
-.character svg {
+.character img {
   width: 100%;
   height: 100%;
   display: block;
+  object-fit: contain;
   filter: drop-shadow(0 6px 12px rgba(93, 64, 55, 0.15));
 }
 
@@ -91,14 +92,14 @@ body.fade-out {
   transform: scale(1) rotate(0deg);
 }
 
-.char-cat { --delay: 0s; }
-.char-bear { --delay: 0.4s; }
-.char-rabbit { --delay: 0.8s; }
-.char-dog { --delay: 1.2s; }
-.char-bird { --delay: 1.6s; }
-.char-squirrel { --delay: 2.0s; }
-.char-hedgehog { --delay: 2.4s; }
-.char-fox { --delay: 2.8s; }
+.char-1 { --delay: 0s; }
+.char-2 { --delay: 0.4s; }
+.char-3 { --delay: 0.8s; }
+.char-4 { --delay: 1.2s; }
+.char-5 { --delay: 1.6s; }
+.char-6 { --delay: 2.0s; }
+.char-7 { --delay: 2.4s; }
+.char-8 { --delay: 2.8s; }
 
 @keyframes characterFloat {
   0% { transform: translateY(0) rotate(0deg); }

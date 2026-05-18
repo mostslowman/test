@@ -278,6 +278,10 @@
       </div>
       <input type="file" id="imageInput" accept="image/jpeg,image/png,image/webp" multiple style="display:none">
       <div class="preview-grid" id="imagePreview"></div>
+      <div style="margin-top:12px;text-align:right;">
+        <button class="upload-btn" id="saveImagesBtn">💾 保存图片到服务器</button>
+        <button class="upload-btn upload-btn-small" id="clearImagesBtn" style="background:#999;margin-left:8px;">🗑️ 清空</button>
+      </div>
     </div>
 
     <div class="section">
@@ -315,164 +319,199 @@
 
   <script>
     const uploadedImages = [];
+    let savedImageCount = 0;
 
-    function showToast(msg, type = 'info') {
+    function showToast(msg, type) {
+      if (!type) type = 'info';
       const t = document.getElementById('toast');
       t.textContent = msg;
-      t.className = `toast ${type} show`;
-      setTimeout(() => t.classList.remove('show'), 2500);
+      t.className = 'toast ' + type + ' show';
+      setTimeout(function () { t.classList.remove('show'); }, 2500);
     }
 
-    // Image upload
-    document.getElementById('imageDropZone').addEventListener('click', () => {
+    document.getElementById('imageDropZone').addEventListener('click', function () {
       document.getElementById('imageInput').click();
     });
 
-    document.getElementById('imageDropZone').addEventListener('dragover', (e) => {
+    document.getElementById('imageDropZone').addEventListener('dragover', function (e) {
       e.preventDefault();
       e.currentTarget.classList.add('dragover');
     });
 
-    document.getElementById('imageDropZone').addEventListener('dragleave', (e) => {
+    document.getElementById('imageDropZone').addEventListener('dragleave', function (e) {
       e.currentTarget.classList.remove('dragover');
     });
 
-    document.getElementById('imageDropZone').addEventListener('drop', (e) => {
+    document.getElementById('imageDropZone').addEventListener('drop', function (e) {
       e.preventDefault();
       e.currentTarget.classList.remove('dragover');
       handleFiles(e.dataTransfer.files);
     });
 
-    document.getElementById('imageInput').addEventListener('change', (e) => {
+    document.getElementById('imageInput').addEventListener('change', function (e) {
       handleFiles(e.target.files);
     });
 
-    async function handleFiles(files) {
-      const remaining = 8 - uploadedImages.length;
+    function handleFiles(files) {
+      var remaining = 8 - uploadedImages.length;
       if (files.length > remaining) {
-        showToast(`最多还能上传 ${remaining} 张图片`, 'error');
+        showToast('最多还能选择 ' + remaining + ' 张图片', 'error');
         return;
       }
-      for (const file of files) {
+      for (var i = 0; i < files.length; i++) {
+        var file = files[i];
         if (!file.type.match(/image\/(jpeg|png|webp)/)) {
-          showToast(`${file.name} 格式不支持`, 'error');
+          showToast(file.name + ' 格式不支持', 'error');
           continue;
         }
         if (file.size > 20 * 1024 * 1024) {
-          showToast(`${file.name} 超过20MB`, 'error');
+          showToast(file.name + ' 超过20MB', 'error');
           continue;
         }
         uploadedImages.push(file);
       }
       renderImagePreviews();
-      await uploadImages();
     }
 
     function renderImagePreviews() {
-      const grid = document.getElementById('imagePreview');
+      var grid = document.getElementById('imagePreview');
       grid.innerHTML = '';
-      uploadedImages.forEach((file, i) => {
-        const div = document.createElement('div');
+      for (var i = 0; i < uploadedImages.length; i++) {
+        var file = uploadedImages[i];
+        var div = document.createElement('div');
         div.className = 'preview-item';
-        const img = document.createElement('img');
+        var img = document.createElement('img');
         img.src = URL.createObjectURL(file);
-        const btn = document.createElement('button');
+        var btn = document.createElement('button');
         btn.className = 'delete-btn';
-        btn.innerHTML = '✕';
-        btn.onclick = async (e) => {
-          e.stopPropagation();
-          uploadedImages.splice(i, 1);
-          renderImagePreviews();
-          updateImageCount();
-          await uploadImages();
-        };
+        btn.textContent = '✕';
+        btn.onclick = (function(idx) {
+          return function(e) {
+            e.stopPropagation();
+            uploadedImages.splice(idx, 1);
+            renderImagePreviews();
+            updateImageCount();
+          };
+        })(i);
         div.appendChild(img);
         div.appendChild(btn);
         grid.appendChild(div);
-      });
+      }
       updateImageCount();
     }
 
     function updateImageCount() {
-      document.getElementById('imageCount').textContent = `${uploadedImages.length}/8`;
+      document.getElementById('imageCount').textContent = uploadedImages.length + '/8';
     }
 
-    async function uploadImages() {
-      if (uploadedImages.length === 0) return;
-      const formData = new FormData();
-      for (const file of uploadedImages) {
-        formData.append('images', file);
+    document.getElementById('saveImagesBtn').addEventListener('click', async function () {
+      if (uploadedImages.length === 0) {
+        showToast('请先选择图片', 'error');
+        return;
       }
+      var formData = new FormData();
+      for (var i = 0; i < uploadedImages.length; i++) {
+        formData.append('images', uploadedImages[i]);
+      }
+      var btn = document.getElementById('saveImagesBtn');
+      btn.disabled = true;
+      btn.innerHTML = '<span class="loading-spinner"></span> 保存中...';
       try {
-        const res = await fetch('/api/upload/images', { method: 'POST', body: formData });
-        const data = await res.json();
-        if (!data.success) showToast(data.message, 'error');
+        var res = await fetch('/api/upload/images', { method: 'POST', body: formData });
+        var data = await res.json();
+        if (data.success) {
+          savedImageCount = uploadedImages.length;
+          showToast('✅ ' + savedImageCount + ' 张图片保存成功！', 'success');
+        } else {
+          showToast(data.message, 'error');
+        }
       } catch (e) {
-        showToast('图片上传失败', 'error');
+        showToast('图片保存失败', 'error');
+      } finally {
+        btn.disabled = false;
+        btn.innerHTML = '💾 保存图片到服务器';
       }
-    }
+    });
 
-    // Audio upload
-    document.getElementById('audioUploadBtn').addEventListener('click', () => {
+    document.getElementById('clearImagesBtn').addEventListener('click', async function () {
+      if (uploadedImages.length === 0 && savedImageCount === 0) {
+        showToast('没有图片需要清空', 'info');
+        return;
+      }
+      uploadedImages.length = 0;
+      savedImageCount = 0;
+      renderImagePreviews();
+      try {
+        await fetch('/api/reset', { method: 'POST' });
+      } catch (e) {}
+      showToast('已清空所有图片', 'info');
+    });
+
+    document.getElementById('audioUploadBtn').addEventListener('click', function () {
       document.getElementById('audioInput').click();
     });
 
-    document.getElementById('audioInput').addEventListener('change', async (e) => {
-      const file = e.target.files[0];
+    document.getElementById('audioInput').addEventListener('change', async function (e) {
+      var file = e.target.files[0];
       if (!file) return;
 
-      const formData = new FormData();
+      var formData = new FormData();
       formData.append('audio', file);
 
+      var btn = document.getElementById('audioUploadBtn');
+      btn.disabled = true;
+      btn.innerHTML = '上传中...';
+
       try {
-        const res = await fetch('/api/upload/audio', { method: 'POST', body: formData });
-        const data = await res.json();
+        var res = await fetch('/api/upload/audio', { method: 'POST', body: formData });
+        var data = await res.json();
         if (data.success) {
-          const player = document.getElementById('audioPlayer');
-          player.src = `/uploads/audio/${data.file}`;
+          var player = document.getElementById('audioPlayer');
+          player.src = '/uploads/audio/' + data.file;
           document.getElementById('audioPlayerWrapper').style.display = 'block';
-          document.getElementById('audioStatus').textContent = `✅ ${file.name}`;
+          document.getElementById('audioStatus').textContent = '✅ ' + file.name;
           showToast('音频上传成功', 'success');
         } else {
           showToast(data.message, 'error');
         }
       } catch (e) {
         showToast('音频上传失败', 'error');
+      } finally {
+        btn.disabled = false;
+        btn.innerHTML = '📂 选择音频文件';
       }
     });
 
-    // Text input
-    document.getElementById('textInput').addEventListener('input', (e) => {
-      const len = e.target.value.length;
-      const count = document.getElementById('charCount');
+    document.getElementById('textInput').addEventListener('input', function (e) {
+      var len = e.target.value.length;
+      var count = document.getElementById('charCount');
       count.textContent = len;
       count.parentElement.className = len > 100 ? 'char-count over' : 'char-count';
     });
 
-    // Generate link
-    document.getElementById('generateBtn').addEventListener('click', async () => {
-      const text = document.getElementById('textInput').value.trim();
+    document.getElementById('generateBtn').addEventListener('click', async function () {
+      var text = document.getElementById('textInput').value.trim();
       if (!text) {
         showToast('请填写祝福语文本', 'error');
         return;
       }
 
-      const btn = document.getElementById('generateBtn');
+      var btn = document.getElementById('generateBtn');
       btn.disabled = true;
       btn.innerHTML = '<span class="loading-spinner"></span> 生成中...';
 
       try {
-        const res = await fetch('/api/upload/text', {
+        var res = await fetch('/api/upload/text', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ text })
+          body: JSON.stringify({ text: text })
         });
-        const data = await res.json();
+        var data = await res.json();
         if (data.success) {
-          const link = `${window.location.protocol}//${window.location.hostname}:${window.location.port}/`;
+          var link = window.location.protocol + '//' + window.location.hostname + ':' + window.location.port + '/';
           document.getElementById('shareLink').value = link;
           document.getElementById('linkSection').classList.add('show');
-          showToast('🎉 链接生成成功！', 'success');
+          showToast('链接生成成功！', 'success');
         } else {
           showToast(data.message, 'error');
         }
@@ -484,33 +523,46 @@
       }
     });
 
-    // Copy link
-    document.getElementById('copyBtn').addEventListener('click', () => {
-      const input = document.getElementById('shareLink');
-      input.select();
-      navigator.clipboard.writeText(input.value).then(() => {
-        showToast('📋 链接已复制！', 'success');
-      }).catch(() => {
+    document.getElementById('copyBtn').addEventListener('click', async function () {
+      var input = document.getElementById('shareLink');
+      try {
+        await navigator.clipboard.writeText(input.value);
+        showToast('链接已复制！', 'success');
+      } catch (e) {
+        input.select();
         document.execCommand('copy');
-        showToast('📋 链接已复制！', 'success');
-      });
+        showToast('链接已复制！', 'success');
+      }
     });
 
-    // Load existing config
     async function loadConfig() {
       try {
-        const res = await fetch('/api/config');
-        const data = await res.json();
+        var res = await fetch('/api/config');
+        var data = await res.json();
         if (data.success && data.config) {
           if (data.config.text) {
             document.getElementById('textInput').value = data.config.text;
             document.getElementById('charCount').textContent = data.config.text.length;
           }
           if (data.config.audio) {
-            const player = document.getElementById('audioPlayer');
-            player.src = `/uploads/audio/${data.config.audio}`;
+            var player = document.getElementById('audioPlayer');
+            player.src = '/uploads/audio/' + data.config.audio;
             document.getElementById('audioPlayerWrapper').style.display = 'block';
             document.getElementById('audioStatus').textContent = '✅ 已上传';
+          }
+          if (data.config.images && data.config.images.length > 0) {
+            var grid = document.getElementById('imagePreview');
+            grid.innerHTML = '';
+            for (var i = 0; i < data.config.images.length; i++) {
+              var div = document.createElement('div');
+              div.className = 'preview-item';
+              var img = document.createElement('img');
+              img.src = '/uploads/images/' + data.config.images[i];
+              div.appendChild(img);
+              grid.appendChild(div);
+            }
+            savedImageCount = data.config.images.length;
+            document.getElementById('imageCount').textContent = savedImageCount + '/8';
           }
         }
       } catch (e) {}

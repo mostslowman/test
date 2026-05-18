@@ -268,9 +268,10 @@ window.addEventListener('DOMContentLoaded', function () {
 
   animate();
 
-  var nextBtn = document.getElementById('nextBtn');
-  if (nextBtn) {
-    nextBtn.addEventListener('click', function () {
+  var heartContainer = document.querySelector('.heart-container');
+  if (heartContainer) {
+    heartContainer.style.cursor = 'pointer';
+    heartContainer.addEventListener('click', function () {
       document.body.classList.add('fade-out');
       setTimeout(function () {
         window.location.href = 'page2.html';

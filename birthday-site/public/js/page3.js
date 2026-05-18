@@ -863,8 +863,16 @@
       })
       .then(function (data) {
         config = data;
-        var images = (data.images && Array.isArray(data.images)) ? data.images : [];
-        var audioUrl = data.audio || null;
+        var images = (data.config.images && Array.isArray(data.config.images)) ? data.config.images : [];
+        var audioUrl = data.config.audio || null;
+
+        if (images.length > 0) {
+          images = images.map(function (name) { return '/uploads/images/' + name; });
+        }
+
+        if (audioUrl) {
+          audioUrl = '/uploads/audio/' + audioUrl;
+        }
 
         if (images.length === 0) {
           showPage();

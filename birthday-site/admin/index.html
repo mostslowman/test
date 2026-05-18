@@ -302,7 +302,10 @@
       </div>
       <div class="text-area-wrapper">
         <textarea id="textInput" maxlength="100" placeholder="写下你想对寿星说的祝福语..."></textarea>
-        <div class="char-count"><span id="charCount">0</span> / 100</div>
+        <div style="display:flex;justify-content:space-between;align-items:center;margin-top:8px;">
+          <div class="char-count"><span id="charCount">0</span> / 100</div>
+          <button class="upload-btn upload-btn-small" id="saveTextBtn">💾 保存文本</button>
+        </div>
       </div>
     </div>
 
@@ -482,17 +485,54 @@
       }
     });
 
+    let textSaved = false;
+
     document.getElementById('textInput').addEventListener('input', function (e) {
       var len = e.target.value.length;
       var count = document.getElementById('charCount');
       count.textContent = len;
       count.parentElement.className = len > 100 ? 'char-count over' : 'char-count';
+      textSaved = false;
+    });
+
+    document.getElementById('saveTextBtn').addEventListener('click', async function () {
+      var text = document.getElementById('textInput').value.trim();
+      if (!text) {
+        showToast('请先填写祝福语文本', 'error');
+        return;
+      }
+      var btn = document.getElementById('saveTextBtn');
+      btn.disabled = true;
+      btn.innerHTML = '<span class="loading-spinner"></span> 保存中...';
+      try {
+        var res = await fetch('/api/upload/text', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ text: text })
+        });
+        var data = await res.json();
+        if (data.success) {
+          textSaved = true;
+          showToast('✅ 祝福语保存成功！', 'success');
+        } else {
+          showToast(data.message, 'error');
+        }
+      } catch (e) {
+          showToast('文本保存失败', 'error');
+      } finally {
+        btn.disabled = false;
+        btn.innerHTML = '💾 保存文本';
+      }
     });
 
     document.getElementById('generateBtn').addEventListener('click', async function () {
       var text = document.getElementById('textInput').value.trim();
       if (!text) {
         showToast('请填写祝福语文本', 'error');
+        return;
+      }
+      if (!textSaved) {
+        showToast('请先点击「保存文本」保存祝福语', 'error');
         return;
       }
 

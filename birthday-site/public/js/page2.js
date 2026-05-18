@@ -68,14 +68,20 @@ window.addEventListener('DOMContentLoaded', function() {
     document.body.classList.add('fade-out');
     setTimeout(function() {
       window.location.href = 'page3.html';
-    }, 600);
+    }, 800);
   });
 
-  // Petal effect on letter click
   var ctx = null;
   var petals = [];
   var petalAnimId = null;
   var petalRunning = false;
+  var petalSpawnCounter = 0;
+
+  var petalColors = [
+    '#f5c6d0', '#f2b5c4', '#e8a9b8', '#f0a5b8',
+    '#e894a8', '#f7d0d8', '#d4a574', '#e8c4a0',
+    '#fce4ec', '#ffd6e0'
+  ];
 
   function initPetalCanvas() {
     petalCanvas.width = window.innerWidth;
@@ -86,16 +92,19 @@ window.addEventListener('DOMContentLoaded', function() {
   function createPetal() {
     return {
       x: Math.random() * window.innerWidth,
-      y: -20,
-      size: 8 + Math.random() * 12,
-      speedY: 1 + Math.random() * 2,
-      speedX: -0.5 + Math.random() * 1,
+      y: -30 - Math.random() * 40,
+      size: 10 + Math.random() * 14,
+      speedY: 0.8 + Math.random() * 1.5,
+      speedX: -0.3 + Math.random() * 0.6,
       rotation: Math.random() * Math.PI * 2,
-      rotationSpeed: -0.02 + Math.random() * 0.04,
-      opacity: 0.6 + Math.random() * 0.4,
-      color: ['#ff6b9d', '#ff8fab', '#ffb3c6', '#ffc8dd', '#ffd6e7'][Math.floor(Math.random() * 5)],
-      swing: Math.random() * 0.02,
-      phase: Math.random() * Math.PI * 2
+      rotationSpeed: -0.015 + Math.random() * 0.03,
+      opacity: 0.5 + Math.random() * 0.45,
+      color: petalColors[Math.floor(Math.random() * petalColors.length)],
+      swingAmplitude: 0.5 + Math.random() * 1.2,
+      swingFrequency: 0.008 + Math.random() * 0.015,
+      phase: Math.random() * Math.PI * 2,
+      scale: 0.7 + Math.random() * 0.6,
+      petalType: Math.floor(Math.random() * 3)
     };
   }
 
@@ -106,38 +115,77 @@ window.addEventListener('DOMContentLoaded', function() {
     ctx.globalAlpha = p.opacity;
     ctx.fillStyle = p.color;
 
+    var s = p.size;
+    var t = p.petalType;
+
     ctx.beginPath();
-    ctx.moveTo(0, 0);
-    ctx.bezierCurveTo(p.size * 0.3, -p.size * 0.5, p.size * 0.7, -p.size * 0.3, p.size, 0);
-    ctx.bezierCurveTo(p.size * 0.7, p.size * 0.3, p.size * 0.3, p.size * 0.5, 0, 0);
+    if (t === 0) {
+      ctx.moveTo(0, 0);
+      ctx.bezierCurveTo(s * 0.1, -s * 0.6, s * 0.6, -s * 0.7, s, 0);
+      ctx.bezierCurveTo(s * 0.6, s * 0.3, s * 0.1, s * 0.4, 0 , 0);
+    } else if (t === 1) {
+      ctx.moveTo(0, 0);
+      ctx.bezierCurveTo(s * 0.2, -s * 0.5, s * 0.7, -s * 0.5, s * 0.9, 0);
+      ctx.bezierCurveTo(s * 0.8, s * 0.4, s * 0.3, s * 0.6, 0, s * 0.3);
+      ctx.bezierCurveTo(-s * 0.1, s * 0.15, -s * 0.05, s * 0.05, 0, 0);
+    } else {
+      ctx.moveTo(0, s * 0.1);
+      ctx.bezierCurveTo(s * 0.2, -s * 0.3, s * 0.5, -s * 0.5, s * 0.8, -s * 0.1);
+      ctx.bezierCurveTo(s * 0.7, 0.1, s * 0.5, s * 0.4, s * 0.3, s * 0.5);
+      ctx.bezierCurveTo(s * 0.15, s * 0.45, s * 0.05, s * 0.3, 0, s * 0.1);
+    }
+
+    ctx.closePath();
     ctx.fill();
+
+    if (p.size > 14) {
+      ctx.globalAlpha = p.opacity * 0.2;
+      ctx.beginPath();
+      if (t === 0) {
+        ctx.moveTo(s * 0.15, -s * 0.05);
+        ctx.bezierCurveTo(s * 0.25, -s * 0.2, s * 0.4, -s * 0.2, s * 0.5, -s * 0.05);
+      } else if (t === 1) {
+        ctx.moveTo(s * 0.2, s * 0.05);
+        ctx.bezierCurveTo(s * 0.35, -s * 0.1, s * 0.5, -s * 0.1, s * 0.65, s * 0.05);
+      } else {
+        ctx.moveTo(s * 0.2, 0);
+        ctx.bezierCurveTo(s * 0.35, -s * 0.2, s * 0.55, -s * 0.2, s * 0.7, 0);
+      }
+      ctx.strokeStyle = 'rgba(255,255,255,0.3)';
+      ctx.lineWidth = 1;
+      ctx.stroke();
+    }
+
     ctx.restore();
   }
 
-  function updatePetals() {
-    if (petalRunning && Math.random() < 0.3 && petals.length < 80) {
-      petals.push(createPetal());
+  function updatePetals(time) {
+    if (petalRunning) {
+      petalSpawnCounter++;
+      if (petalSpawnCounter % 3 === 0 && petals.length < 100 && Math.random() < 0.4) {
+        petals.push(createPetal());
+      }
     }
 
     for (var i = petals.length - 1; i >= 0; i--) {
       var p = petals[i];
-      p.x += p.speedX + Math.sin(Date.now() * p.swing + p.phase) * 0.5;
+      p.x += p.speedX + Math.sin(time * p.swingFrequency + p.phase) * p.swingAmplitude;
       p.y += p.speedY;
       p.rotation += p.rotationSpeed;
 
-      if (p.y > window.innerHeight + 20) {
+      if (p.y > window.innerHeight + 30) {
         petals.splice(i, 1);
       }
     }
   }
 
-  function drawScene() {
+  function drawScene(time) {
     if (!ctx) return;
     ctx.clearRect(0, 0, petalCanvas.width, petalCanvas.height);
     for (var i = 0; i < petals.length; i++) {
       drawPetal(petals[i]);
     }
-    updatePetals();
+    updatePetals(time);
     petalAnimId = requestAnimationFrame(drawScene);
   }
 
@@ -145,7 +193,12 @@ window.addEventListener('DOMContentLoaded', function() {
     if (petalRunning) return;
     petalRunning = true;
     initPetalCanvas();
-    drawScene();
+    for (var i = 0; i < 15; i++) {
+      var p = createPetal();
+      p.y = Math.random() * window.innerHeight * 0.5;
+      petals.push(p);
+    }
+    petalAnimId = requestAnimationFrame(drawScene);
   }
 
   letterPaper.addEventListener('click', function() {
